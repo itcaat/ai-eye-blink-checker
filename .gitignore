@@ -50,3 +50,12 @@ htmlcov/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# Generated files
+blink_plot_*.png
+example_blink_plot.png
+
+# Custom alarm sounds are NOT ignored (user can add their own)
+# alarm.wav
+# alarm.mp3
+# alarm.ogg

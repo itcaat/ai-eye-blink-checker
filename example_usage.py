@@ -3,6 +3,7 @@
 import cv2
 import time
 from blink_checker.detector import BlinkDetector
+from blink_checker.plotter import MinimalBlinkPlotter
 
 
 def simple_example():
@@ -74,6 +75,59 @@ def custom_parameters_example():
     print("\nЭти параметры сделают детекцию более строгой")
     
     # ... остальной код аналогично simple_example()
+
+
+def plot_example():
+    """Пример использования с графиком."""
+    print("\n" + "="*60)
+    print("📊 Пример с графиком морганий\n")
+    
+    # Инициализация детектора и графика
+    detector = BlinkDetector(alarm_threshold=0)
+    plotter = MinimalBlinkPlotter(group_by_minutes=1)
+    
+    cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        print("❌ Не удалось открыть камеру")
+        return
+    
+    plotter.show()
+    print("📊 График открыт в отдельном окне")
+    print("⏱️ Мониторинг 30 секунд...\n")
+    
+    start_time = time.time()
+    duration = 30
+    last_update = time.time()
+    
+    while time.time() - start_time < duration:
+        ret, frame = cap.read()
+        if not ret:
+            break
+        
+        blink_detected, ear, annotated_frame = detector.detect_blink(frame)
+        
+        if blink_detected:
+            print(f"👁️ Моргание! Всего: {detector.get_blink_count()}")
+            plotter.add_blink()
+        
+        # Обновление графика каждые 2 секунды
+        if time.time() - last_update >= 2.0:
+            plotter.update()
+            last_update = time.time()
+        
+        cv2.imshow("Plot Example", annotated_frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+    
+    # Финальное обновление и сохранение
+    plotter.update()
+    plotter.save("example_blink_plot.png")
+    
+    cap.release()
+    cv2.destroyAllWindows()
+    plotter.close()
+    
+    print(f"\n✅ Завершено. Всего морганий: {detector.get_blink_count()}")
 
 
 def alarm_example():
@@ -167,7 +221,8 @@ if __name__ == "__main__":
     # Запуск примеров
     try:
         # simple_example()
-        alarm_example()  # Раскомментируйте для запуска
+        # plot_example()  # Раскомментируйте для запуска
+        alarm_example()  # Текущий пример
         # custom_parameters_example()  # Раскомментируйте для запуска
         # headless_example()  # Раскомментируйте для запуска
     except KeyboardInterrupt:
