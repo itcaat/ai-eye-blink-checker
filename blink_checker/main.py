@@ -10,8 +10,22 @@ from blink_checker.detector import BlinkDetector
 from blink_checker.plotter import MinimalBlinkPlotter
 
 
+# Global variables to store current sound state
+_current_sound = None
+_pygame_initialized = False
+_alarm_playing = False
+
+
 def play_alarm_sound():
-    """Play alarm sound (supports custom audio files)."""
+    """Play alarm sound (supports custom audio files). Loops until stopped."""
+    global _current_sound, _pygame_initialized, _alarm_playing
+    
+    # Don't start if already playing
+    if _alarm_playing:
+        return
+    
+    _alarm_playing = True
+    
     # Search for custom alarm files in project directory
     possible_files = [
         'alarm.wav', 'alarm.mp3', 'alarm.ogg',
@@ -30,10 +44,11 @@ def play_alarm_sound():
         try:
             # Try pygame (best option)
             import pygame
-            if not pygame.mixer.get_init():
+            if not _pygame_initialized:
                 pygame.mixer.init()
-            sound = pygame.mixer.Sound(alarm_file)
-            sound.play()
+                _pygame_initialized = True
+            _current_sound = pygame.mixer.Sound(alarm_file)
+            _current_sound.play(loops=-1)  # Loop until stopped
             return
         except ImportError:
             pass
@@ -70,6 +85,22 @@ def play_alarm_sound():
     except Exception:
         # Last resort: terminal beep
         print('\a' * 3)
+
+
+def stop_alarm_sound():
+    """Stop currently playing alarm sound."""
+    global _current_sound, _pygame_initialized, _alarm_playing
+    
+    if not _alarm_playing:
+        return
+    
+    _alarm_playing = False
+    
+    if _pygame_initialized and _current_sound:
+        try:
+            _current_sound.stop()
+        except Exception:
+            pass
 
 
 def main():
@@ -205,6 +236,8 @@ def main():
             
             if blink_detected:
                 print(f"👁️ Blink detected! Total blinks: {detector.get_blink_count()}")
+                # Stop alarm sound when user blinks
+                stop_alarm_sound()
                 # Update plotter
                 if plotter:
                     plotter.add_blink()
