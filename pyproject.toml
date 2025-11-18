@@ -1,0 +1,22 @@
+[project]
+name = "ai-eye-blink-checker"
+version = "0.1.0"
+description = "Application to detect eye blinks using camera"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "opencv-python>=4.8.0",
+    "mediapipe>=0.10.0",
+    "numpy>=1.24.0",
+]
+
+[project.scripts]
+blink-checker = "blink_checker.main:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["blink_checker"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
